@@ -1,0 +1,20 @@
+name: Make My Video
+on: [workflow_dispatch] # This adds a 'Run' button
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install Tools
+        run: pip install -r requirements.txt
+      - name: Run Machine
+        run: python main.py
+      - name: Save Video
+        uses: actions/upload-artifact@v4
+        with:
+          name: my-final-video
+          path: final_video.mp4
