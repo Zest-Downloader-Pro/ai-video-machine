@@ -9,8 +9,8 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-      - name: Install Tools
-        run: pip install moviepy Pillow
+      - - name: Install Tools
+        run: pip install moviepy==1.0.3 Pillow  # Using a stable version for phone-builds
       - name: Run Machine
         run: python main.py
       - name: Save Video
