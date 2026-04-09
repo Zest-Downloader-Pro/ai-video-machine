@@ -1,5 +1,5 @@
 name: Make My Video
-on: [workflow_dispatch] # This adds the 'Run' button you are looking for
+on: [workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -9,8 +9,11 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-      - - name: Install Tools
-        run: pip install moviepy==1.0.3 Pillow  # Using a stable version for phone-builds
+      - name: Install Video Engines
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          pip install moviepy==1.0.3 Pillow
       - name: Run Machine
         run: python main.py
       - name: Save Video
@@ -18,3 +21,4 @@ jobs:
         with:
           name: my-final-video
           path: final_video.mp4
+          if-no-files-found: error
