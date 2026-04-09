@@ -1,21 +1,32 @@
 import os
+from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips
 
-def check_files():
-    print("--- ROBOT SEARCH START ---")
-    files = os.listdir('.')
-    print(f"I found these files: {files}")
+def create_video():
+    print("Files confirmed. Starting the render...")
     
-    mp3s = [f for f in files if f.lower().endswith('.mp3')]
-    imgs = [f for f in files if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+    # 1. Grab the files the robot found
+    audio_file = 'audio.mp3'
+    images = [f for f in os.listdir('.') if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+    images.sort()
     
-    print(f"Count of MP3s: {len(mp3s)}")
-    print(f"Count of Images: {len(imgs)}")
+    # 2. Setup timing
+    audio = AudioFileClip(audio_file)
+    img_dur = audio.duration / len(images)
+    print(f"Total audio length: {audio.duration}s. Each image will show for {img_dur:.2f}s")
+
+    # 3. Build the clips
+    clips = []
+    for img in images:
+        # Resize to fit phone screen (720p height for faster processing)
+        clip = ImageClip(img).set_duration(img_dur).resize(height=1280)
+        clips.append(clip)
+
+    # 4. Join and Export
+    final = concatenate_videoclips(clips, method="compose").set_audio(audio)
     
-    if len(mp3s) == 0 or len(imgs) == 0:
-        print("ERROR: I am blind! I don't see your MP3 or your Images.")
-    else:
-        print("SUCCESS: I can see everything. We can build now.")
-    print("--- ROBOT SEARCH END ---")
+    print("Writing video file... this will take a few minutes...")
+    final.write_videofile("final_video.mp4", fps=24, codec="libx264", audio_codec="aac", threads=4)
+    print("SUCCESS: final_video.mp4 is ready!")
 
 if __name__ == "__main__":
-    check_files()
+    create_video()
