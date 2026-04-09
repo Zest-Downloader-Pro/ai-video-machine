@@ -1,40 +1,53 @@
 import os
-from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips, TextClip, CompositeVideoClip
-
-# 1. SETUP - Change these names to match your files
-AUDIO_FILE = "adam_voiceover.mp3"  # Put your ElevenLabs file here
-IMAGE_FOLDER = "images"            # Put your Pexels pictures in a folder named 'images'
-OUTPUT_NAME = "final_video.mp4"
+from moviepy.editor import ImageClip, AudioFileClip, concatenate_videoclips
 
 def create_video():
-    # Load the audio to know how long the video should be
-    audio = AudioFileClip(AUDIO_FILE)
-    audio_duration = audio.duration
+    # 1. FIND THE AUDIO FILE AUTOMATICALLY
+    # This looks for any file ending in .mp3 so you don't have to type the long name
+    audio_files = [f for f in os.listdir('.') if f.lower().endswith('.mp3')]
     
-    # Get all pictures from the folder
-    images = [os.path.join(IMAGE_FOLDER, img) for img in os.listdir(IMAGE_FOLDER) if img.endswith(('.jpg', '.png'))]
+    if not audio_files:
+        print("Error: No MP3 file found! Please upload your Adam voiceover.")
+        return
+    
+    AUDIO_FILE = audio_files[0]
+    print(f"Using audio file: {AUDIO_FILE}")
+
+    # 2. FIND ALL PICTURES
+    # This grabs .jpg, .jpeg, .png, and .webp regardless of capital letters
+    valid_extensions = ('.jpg', '.jpeg', '.png', '.webp')
+    images = [f for f in os.listdir('.') if f.lower().endswith(valid_extensions)]
+    
+    # Sort them so they play in order
+    images.sort()
     
     if not images:
-        print("No images found! Add some pictures to the 'images' folder.")
+        print("Error: No pictures found! Please upload your Pexels images.")
         return
+    print(f"Found {len(images)} images.")
 
-    # Calculate how long each picture should stay on screen
-    duration_per_image = audio_duration / len(images)
+    # 3. BUILD THE VIDEO
+    audio = AudioFileClip(AUDIO_FILE)
+    duration_per_image = audio.duration / len(images)
     
     clips = []
     for img_path in images:
-        # Create a 9:16 (Shorts) sized clip for each image
-        clip = ImageClip(img_path).set_duration(duration_per_image)
-        clip = clip.resize(height=1920) # Standard Vertical Height
-        clips.append(clip)
+        try:
+            # Create clip and resize for a phone screen (YouTube Shorts/TikTok)
+            clip = ImageClip(img_path).set_duration(duration_per_image)
+            # Resize to standard vertical 1080x1920
+            clip = clip.resize(height=1920) 
+            clips.append(clip)
+        except Exception as e:
+            print(f"Skipping broken image {img_path}: {e}")
 
-    # Stitch the pictures together
+    # Stitch everything together
     video = concatenate_videoclips(clips, method="compose")
     video = video.set_audio(audio)
 
-    # Save the final result
-    video.write_videofile(OUTPUT_NAME, fps=24, codec="libx264")
-    print(f"Success! Your video is ready: {OUTPUT_NAME}")
+    # 4. EXPORT
+    video.write_videofile("final_video.mp4", fps=24, codec="libx264", audio_codec="aac")
+    print("Success! Your video 'final_video.mp4' is ready.")
 
 if __name__ == "__main__":
     create_video()
